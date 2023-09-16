@@ -2,6 +2,7 @@ package me.project.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Objects;
@@ -12,6 +13,7 @@ public class JapressServer {
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private final int port;
+    private final ByteBuffer preambleBuffer;
 
     private volatile boolean running = true;
 
@@ -21,6 +23,7 @@ public class JapressServer {
 
     private JapressServer(int port) throws IOException {
         this.port = port;
+        this.preambleBuffer = ByteBuffer.allocate(16 * 1024);
 
         openSelector();
         openChannel();
@@ -57,6 +60,7 @@ public class JapressServer {
                     }
 
                     iterator.remove();
+                    this.preambleBuffer.clear();
                 }
             } catch (IOException e) {
                 close(selectionKey);

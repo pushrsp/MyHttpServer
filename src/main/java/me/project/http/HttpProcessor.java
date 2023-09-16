@@ -7,5 +7,9 @@ public interface HttpProcessor {
 
     long lastUsed();
 
-    void read(ByteBuffer buffer) throws IOException;
+    ProcessorState state();
+
+    ProcessorState read(ByteBuffer buffer) throws IOException;
+
+    ByteBuffer readBuffer() throws IOException;
 }
