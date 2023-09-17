@@ -2,8 +2,11 @@ package me.project.http;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.Future;
 
 public class Http11Processor implements HttpProcessor {
+
+    private Future<?> future;
 
     private final ByteBuffer preambleBuffer;
 
@@ -16,10 +19,6 @@ public class Http11Processor implements HttpProcessor {
         this.state = ProcessorState.Read;
     }
 
-    public void markUsed(ByteBuffer preambleBuffer) {
-        lastUsed = System.currentTimeMillis();
-    }
-
     @Override
     public long lastUsed() {
         return this.lastUsed;
@@ -27,6 +26,17 @@ public class Http11Processor implements HttpProcessor {
 
     @Override
     public ProcessorState state() {
+        return this.state;
+    }
+
+    @Override
+    public ProcessorState cancel(boolean endOfStream) {
+        if(this.future != null) {
+            future.cancel(true);
+        }
+
+        this.state = ProcessorState.Close;
+
         return this.state;
     }
 

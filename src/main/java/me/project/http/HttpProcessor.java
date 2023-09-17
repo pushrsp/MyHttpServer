@@ -9,6 +9,8 @@ public interface HttpProcessor {
 
     ProcessorState state();
 
+    ProcessorState cancel(boolean endOfStream);
+
     ProcessorState read(ByteBuffer buffer) throws IOException;
 
     ByteBuffer readBuffer() throws IOException;
