@@ -5,6 +5,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static me.project.http.HTTPValues.*;
+
 public class HttpRequest {
 
     private final List<String> acceptEncodings = new LinkedList<>();
@@ -64,6 +66,12 @@ public class HttpRequest {
         this.multipartBufferSize = 1024;
     }
 
+    public HttpRequest(int port) {
+        this.contextPath = "";
+        this.multipartBufferSize = 1024;
+        this.port = port;
+    }
+
     public HttpRequest(String contextPath, int multipartBufferSize, String scheme, int port, String ipAddress) {
         Objects.requireNonNull(contextPath);
         Objects.requireNonNull(scheme);
@@ -74,11 +82,66 @@ public class HttpRequest {
         this.ipAddress = ipAddress;
     }
 
+    public Long getContentLength() {
+        return contentLength;
+    }
+
     public void addAcceptEncoding(String encoding) {
         this.acceptEncodings.add(encoding);
     }
 
     public void addAcceptEncodings(List<String> encodings) {
         this.acceptEncodings.addAll(encodings);
+    }
+
+    public void setMethod(HttpMethod method) {
+        this.method = method;
+    }
+
+    public HttpMethod getMethod() {
+        return this.method;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getPath() {
+        return this.path;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+
+    public String getProtocol() {
+        return this.protocol;
+    }
+
+    public String getHeader(String name) {
+        List<String> values = getHeaders(name);
+        return values != null && values.size() > 0 ? values.get(0) : null;
+    }
+
+    public List<String> getHeaders(String name) {
+        return headers.get(name.toLowerCase());
+    }
+
+    public void addHeader(String name, String value) {
+        name = name.toLowerCase();
+        this.headers.computeIfAbsent(name, key -> new ArrayList<>()).add(value);
+        decodeHeader(name, value);
+    }
+
+    private void decodeHeader(String name, String value) {
+        //TODO
+    }
+
+    public boolean isChunked() {
+        return getTransferEncoding() != null && getTransferEncoding().equalsIgnoreCase(TransferEncodings.Chunked);
+    }
+
+    public String getTransferEncoding() {
+        return getHeader(Headers.TransferEncoding);
     }
 }

@@ -14,4 +14,6 @@ public interface HttpProcessor {
     ProcessorState read(ByteBuffer buffer) throws IOException;
 
     ByteBuffer readBuffer() throws IOException;
+
+    ProcessorState close(boolean endOfStream) throws IOException;
 }
