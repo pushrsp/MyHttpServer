@@ -1,76 +1,36 @@
 package me.project.pool;
 
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class JapressThreadPool implements Executor {
+public class JapressThreadPool {
 
-    private static final Runnable SHUTDOWN_TASK = () -> { };
+    private final ExecutorService executor;
 
-    private final BlockingQueue<Runnable> bq = new LinkedTransferQueue<>();
-    private final Thread[] threads;
-    private final AtomicBoolean started = new AtomicBoolean(false);
-    private final AtomicBoolean shutdown = new AtomicBoolean(false);
+    private final Duration shutdown;
 
-    public JapressThreadPool(int numThreads) {
-        this.threads = new Thread[numThreads];
-        for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(() -> {
-                while (true) {
-                    try {
-                        Runnable task = bq.take();
-                        if(task == SHUTDOWN_TASK) {
-                            break;
-                        } else {
-                            task.run();
-                        }
-                    } catch (Throwable t) {
-                        if(!(t instanceof InterruptedException)) {
-                            System.err.println("Unexpected exception: ");
-                            t.printStackTrace();
-                        }
-                    }
-                }
+    public JapressThreadPool(int numberOfThreads, String namePrefix, Duration shutdown) {
+        AtomicInteger threadCount = new AtomicInteger(1);
+        this.executor = Executors.newFixedThreadPool(numberOfThreads, runnable -> new Thread(runnable, namePrefix + " " + threadCount.getAndIncrement()));
+        this.shutdown = shutdown;
+    }
 
-                System.err.println("Shutting thread " + Thread.currentThread().getName());
-            });
+    public boolean shutdown() {
+        executor.shutdownNow();
+
+        try {
+            return executor.awaitTermination(shutdown.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            // Ignore and exit
+            return false;
         }
     }
 
-    @Override
-    public void execute(Runnable command) {
-        if(started.compareAndSet(false, true)) {
-            for (Thread thread : this.threads) {
-                thread.start();
-            }
-        }
-
-        if(this.shutdown.get()) {
-            throw new RejectedExecutionException();
-        }
-
-        bq.add(command);
-
-        if(shutdown.get()) {
-            bq.remove(command);
-        }
-    }
-
-    public void shutdown() {
-        if(this.shutdown.compareAndSet(false, true)) {
-            for (int i = 0; i < this.threads.length; i++) {
-                bq.add(SHUTDOWN_TASK);
-            }
-        }
-
-        for (Thread thread : this.threads) {
-            do {
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    // do not propagate to prevent incomplete shutdown.
-                }
-            } while (thread.isAlive());
-        }
+    public Future<?> submit(Runnable runnable) {
+        return this.executor.submit(runnable);
     }
 }
