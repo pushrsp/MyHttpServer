@@ -1,15 +1,13 @@
 package me.project.server;
 
-import me.project.http.Http11Processor;
-import me.project.http.HttpProcessor;
-import me.project.http.ProcessorState;
+import me.project.http.*;
+import me.project.pool.JapressThreadPool;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
@@ -20,16 +18,20 @@ public class JapressServer {
     private Selector selector;
     private final int port;
     private final ByteBuffer readBuffer;
+    private final JapressThreadPool threadPool;
+    private final HttpHandler rootHandler;
 
     private volatile boolean running = true;
 
-    public static void run(int port) throws IOException {
-        new JapressServer(port).run();
+    public static void run(int port, int numOfThreads) throws IOException {
+        new JapressServer(port, numOfThreads).run();
     }
 
-    private JapressServer(int port) throws IOException {
+    private JapressServer(int port, int numOfThreads) throws IOException {
+        this.rootHandler = new DefaultHttpHandler();
         this.port = port;
         this.readBuffer = ByteBuffer.allocate(16 * 1024);
+        this.threadPool = new JapressThreadPool(numOfThreads, "HTTP Server Worker Thread", Duration.ofSeconds(10));
 
         openSelector();
         openChannel();
@@ -104,7 +106,7 @@ public class JapressServer {
 
     private void accept(SelectionKey selectionKey) throws IOException {
         SocketChannel client = this.serverSocketChannel.accept();
-        Http11Processor http11Processor = new Http11Processor(this.readBuffer);
+        Http11Processor http11Processor = new Http11Processor(this.rootHandler, this.threadPool, this.readBuffer, this.port);
         client.configureBlocking(false);
         client.register(selectionKey.selector(), SelectionKey.OP_READ, http11Processor);
     }
@@ -116,21 +118,30 @@ public class JapressServer {
 
         if(state == ProcessorState.Read) {
             ByteBuffer buffer = httpProcessor.readBuffer();
-            int size = client.read(buffer);
-            System.out.println("read: " + size);
+            if(buffer != null) {
+                int size;
+                try {
+                    size = client.read(buffer);
+                } catch (IOException ex) {
+                    //FIXME
+                    throw ex;
+                }
 
-            if(size < 0) {
-                state = httpProcessor.cancel(true);
-            } else {
-                buffer.flip();
-                httpProcessor.read(buffer);
+                System.out.println("size: " + size);
+
+                if(size < 0) {
+                    state = httpProcessor.close(true);
+                } else {
+                    buffer.flip();
+                    state = httpProcessor.read(buffer);
+                }
             }
         }
 
         if(state == ProcessorState.Close) {
             close(selectionKey);
         } else {
-            //TODO
+            selectionKey.interestOps(SelectionKey.OP_WRITE);
         }
     }
 
