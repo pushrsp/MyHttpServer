@@ -82,6 +82,10 @@ public class HttpRequest {
         this.ipAddress = ipAddress;
     }
 
+    public List<String> getAcceptEncodings() {
+        return this.acceptEncodings;
+    }
+
     public Long getContentLength() {
         return contentLength;
     }

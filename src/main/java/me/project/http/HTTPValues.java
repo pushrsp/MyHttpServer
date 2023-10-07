@@ -156,4 +156,86 @@ public class HTTPValues {
 
         private TransferEncodings() { }
     }
+
+    public static final class ContentEncodings {
+        public static final String Deflate = "deflate";
+
+        public static final String Gzip = "gzip";
+
+        private ContentEncodings() { }
+    }
+
+    public static final class Connections {
+        public static final String Close = "close";
+
+        public static final String KeepAlive = "keep-alive";
+
+        private Connections() { }
+    }
+
+    public static final class CookieAttributes {
+        public static final String Domain = "Domain";
+
+        public static final String DomainLower = "domain";
+
+        public static final String Expires = "Expires";
+
+        public static final String ExpiresLower = "expires";
+
+        public static final String HttpOnly = "HttpOnly";
+
+        public static final String HttpOnlyLower = "httponly";
+
+        public static final String MaxAge = "Max-Age";
+
+        public static final String MaxAgeLower = "max-age";
+
+        public static final String Path = "Path";
+
+        public static final String PathLower = "path";
+
+        public static final String SameSite = "SameSite";
+
+        public static final String SameSiteLower = "samesite";
+
+        public static final String Secure = "Secure";
+
+        public static final String SecureLower = "secure";
+
+        private CookieAttributes() { }
+    }
+
+    public static final class ProtocolBytes {
+        public static final byte[] HTTTP1_1 = Protocols.HTTTP1_1.getBytes();
+
+        private ProtocolBytes() { }
+    }
+
+    public static final class Protocols {
+        public static final String HTTTP1_1 = "HTTP/1.1";
+
+        private Protocols() { }
+    }
+
+    public static final class ControlBytes {
+        public static final byte CR = '\r';
+
+        public static final byte Dash = '-';
+
+        public static final byte LF = '\n';
+
+        public static final byte[] CRLF = {CR, LF};
+
+        public static final byte[] ChunkedTerminator = {'0', CR, LF, CR, LF};
+
+        public static final byte[] MultipartBoundaryPrefix = {CR, LF, Dash, Dash};
+
+        public static final byte[] MultipartTerminator = {Dash, Dash};
+
+        public static final byte Zero = '0';
+
+        public static final byte[] MultipartFinalChunkBytes = {Zero, CR, LF, CR, LF};
+
+        private ControlBytes() { }
+    }
 }

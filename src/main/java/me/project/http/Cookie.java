@@ -1,5 +1,7 @@
 package me.project.http;
 
+import me.project.utils.DateUtils;
+
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,17 @@ public class Cookie {
         List<Cookie> cookies = new ArrayList<>();
 
         return cookies;
+    }
+
+    public String toResponseHeader() {
+        return this.name + "=" + this.value
+                + (this.domain != null ? ("; " + HTTPValues.CookieAttributes.Domain + "=" + this.domain) : "")
+                + (this.expires != null ? ("; " + HTTPValues.CookieAttributes.Expires + "=" + DateUtils.format(this.expires)) : "")
+                + (this.httpOnly ? ("; " + HTTPValues.CookieAttributes.HttpOnly) : "")
+                + (this.maxAge != null ? ("; " + HTTPValues.CookieAttributes.MaxAge + "=" + this.maxAge) : "")
+                + (this.path != null ? ("; " + HTTPValues.CookieAttributes.Path + "=" + this.path) : "")
+                + (this.sameSite != null ? ("; " + HTTPValues.CookieAttributes.SameSite + "=" + this.sameSite.name()) : "")
+                + (this.secure ? ("; " + HTTPValues.CookieAttributes.Secure) : "");
     }
 
     public enum SameSite {

@@ -22,6 +22,10 @@ public class HttpRequestProcessor {
         return this.state;
     }
 
+    public void resetState(RequestState state) {
+        this.state = state;
+    }
+
     public RequestState processPreambleBytes(ByteBuffer buffer) {
         while (buffer.hasRemaining()) {
             byte ch = buffer.get();

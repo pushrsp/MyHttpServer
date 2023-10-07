@@ -4,5 +4,5 @@ import java.nio.channels.SelectionKey;
 
 public interface HttpHandler {
 
-    void handle(HttpRequest request);
+    void handle(HttpRequest request, HttpResponse response);
 }

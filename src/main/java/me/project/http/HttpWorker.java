@@ -19,10 +19,9 @@ public class HttpWorker implements Runnable {
     @Override
     public void run() {
         try {
-            this.httpHandler.handle(this.request);
+            this.httpHandler.handle(this.request, this.response);
         } catch (Throwable t) {
-            //FIXME
-            t.printStackTrace();
+            this.httpProcessor.failure(t);
         }
     }
 }

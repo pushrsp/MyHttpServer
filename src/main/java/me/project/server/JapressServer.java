@@ -1,5 +1,6 @@
 package me.project.server;
 
+import me.project.exception.io.ClientAbortException;
 import me.project.http.*;
 import me.project.pool.JapressThreadPool;
 
@@ -14,10 +15,16 @@ import java.util.Set;
 
 public class JapressServer {
 
+    private final long minimumReadThroughput = 16 * 1024;
+
+    private long minimumWriteThroughput = 16 * 1024;
+
+    private final Duration clientTimeout =  Duration.ofSeconds(20);
+
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private final int port;
-    private final ByteBuffer readBuffer;
+    private final ByteBuffer preambleBuffer;
     private final JapressThreadPool threadPool;
     private final HttpHandler rootHandler;
 
@@ -30,7 +37,7 @@ public class JapressServer {
     private JapressServer(int port, int numOfThreads) throws IOException {
         this.rootHandler = new DefaultHttpHandler();
         this.port = port;
-        this.readBuffer = ByteBuffer.allocate(16 * 1024);
+        this.preambleBuffer = ByteBuffer.allocate(16 * 1024);
         this.threadPool = new JapressThreadPool(numOfThreads, "HTTP Server Worker Thread", Duration.ofSeconds(10));
 
         openSelector();
@@ -69,7 +76,7 @@ public class JapressServer {
 
                     iterator.remove();
                     selectionKey = null;
-                    this.readBuffer.clear();
+                    this.preambleBuffer.clear();
                 }
 
                 clean();
@@ -80,12 +87,24 @@ public class JapressServer {
     }
 
     private void clean() {
+        long now = System.currentTimeMillis();
         for (SelectionKey key : this.selector.keys()) {
             if(Objects.isNull(key.attachment())) {
                 continue;
             }
 
-//            key.cancel();
+            HttpProcessor processor = (HttpProcessor) key.attachment();
+            ProcessorState state = processor.state();
+            boolean readingSlow = state == ProcessorState.Read && processor.readThroughput() < this.minimumReadThroughput;
+            boolean writingSlow = state == ProcessorState.Write && processor.writeThroughput() < this.minimumWriteThroughput;
+            boolean timeOut = processor.lastUsed() < now - this.clientTimeout.toMillis();
+            boolean badChannel = readingSlow || writingSlow || timeOut;
+
+            if (!badChannel) {
+                continue;
+            }
+
+            cancelAndCloseKey(key);
         }
     }
 
@@ -106,7 +125,7 @@ public class JapressServer {
 
     private void accept(SelectionKey selectionKey) throws IOException {
         SocketChannel client = this.serverSocketChannel.accept();
-        Http11Processor http11Processor = new Http11Processor(this.rootHandler, this.threadPool, this.readBuffer, this.port);
+        Http11Processor http11Processor = new Http11Processor(this.rootHandler, this.threadPool, this.preambleBuffer, this.port);
         client.configureBlocking(false);
         client.register(selectionKey.selector(), SelectionKey.OP_READ, http11Processor);
     }
@@ -145,12 +164,47 @@ public class JapressServer {
         }
     }
 
-    private void write(SelectionKey selectionKey) {
+    private void write(SelectionKey selectionKey) throws IOException {
+        Http11Processor processor = (Http11Processor) selectionKey.attachment();
+        ProcessorState state = processor.state();
+        SocketChannel client = (SocketChannel) selectionKey.channel();
+        ByteBuffer[] buffers = processor.writeBuffers();
+        if(state == ProcessorState.Write) {
+            long size = 0;
+            if(buffers != null) {
+                try {
+                    size = client.write(buffers);
+                } catch (IOException ex) {
+                    throw new ClientAbortException(ex);
+                }
+            }
 
+            if(size < 0) {
+                state = processor.close(true);
+            } else {
+                // Always call wrote to update the state even if zero bytes were written
+                state = processor.wrote(size);
+            }
+        }
+
+        // If the key is done, cancel and close it out. Otherwise, turn it around for KeepAlive handling to start reading the next request
+        if(state == ProcessorState.Close) {
+            cancelAndCloseKey(selectionKey);
+        } else if(state == ProcessorState.Read) {
+            selectionKey.interestOps(SelectionKey.OP_READ);
+        } else if(state == ProcessorState.Reset) {
+            // TODO: reset processor
+            Http11Processor http11Processor = new Http11Processor(this.rootHandler, this.threadPool, this.preambleBuffer, this.port);
+            selectionKey.interestOps(SelectionKey.OP_READ);
+        }
     }
 
-    private void cancel(SelectionKey selectionKey) {
+    private void cancelAndCloseKey(SelectionKey selectionKey) {
         if(selectionKey != null) {
+            if(selectionKey.attachment() != null) {
+                ((HttpProcessor) selectionKey.attachment()).close(false);
+            }
+
             selectionKey.cancel();
         }
     }
