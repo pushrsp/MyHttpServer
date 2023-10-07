@@ -1,0 +1,159 @@
+package me.project.http;
+
+public class HTTPValues {
+
+    private HTTPValues() { }
+
+    public static final class Headers {
+
+        public static final String AcceptEncoding = "Accept-Encoding";
+
+        public static final String AcceptEncodingLower = "accept-encoding";
+
+        public static final String AcceptLanguage = "Accept-Language";
+
+        public static final String AcceptLanguageLower = "accept-language";
+
+        /**
+         * The Access-Control-Allow-Credentials header indicates whether the response to request can be exposed when the omit credentials flag
+         * is unset. When part of the response to a preflight request it indicates that the actual request can include user credentials.
+         */
+        public static final String AccessControlAllowCredentials = "Access-Control-Allow-Credentials";
+
+        /**
+         * The Access-Control-Allow-Headers header indicates, as part of the response to a preflight request, which header field names can be
+         * used during the actual request.
+         */
+        public static final String AccessControlAllowHeaders = "Access-Control-Allow-Headers";
+
+        /**
+         * The Access-Control-Allow-Methods header indicates, as part of the response to a preflight request, which methods can be used during
+         * the actual request.
+         */
+        public static final String AccessControlAllowMethods = "Access-Control-Allow-Methods";
+
+        /**
+         * The Access-Control-Allow-Origin header indicates whether a resource can be shared based by returning the value of the Origin request
+         * header in the response.
+         */
+        public static final String AccessControlAllowOrigin = "Access-Control-Allow-Origin";
+
+        /**
+         * The Access-Control-Expose-Headers header indicates which headers are safe to expose to the API of a CORS API specification
+         */
+        public static final String AccessControlExposeHeaders = "Access-Control-Expose-Headers";
+
+        /**
+         * The Access-Control-Max-Age header indicates how long the results of a preflight request can be cached in a preflight result cache.
+         */
+        public static final String AccessControlMaxAge = "Access-Control-Max-Age";
+
+        /**
+         * The Access-Control-Request-Headers header indicates which headers will be used in the actual request as part of the preflight
+         * request.
+         */
+        public static final String AccessControlRequestHeaders = "Access-Control-Request-Headers";
+
+        /**
+         * The Access-Control-Request-Method header indicates which method will be used in the actual request as part of the preflight request.
+         */
+        public static final String AccessControlRequestMethod = "Access-Control-Request-Method";
+
+        public static final String CacheControl = "Cache-Control";
+
+        public static final String Connection = "Connection";
+
+        public static final String ContentDispositionLower = "content-disposition";
+
+        public static final String ContentEncoding = "Content-Encoding";
+
+        public static final String ContentLength = "Content-Length";
+
+        public static final String ContentLengthLower = "content-length";
+
+        public static final String ContentType = "Content-Type";
+
+        public static final String ContentTypeLower = "content-type";
+
+        public static final String Cookie = "Cookie";
+
+        public static final String CookieLower = "cookie";
+
+        public static final String Date = "Date";
+
+        public static final String Expect = "Expect";
+
+        public static final String Expires = "Expires";
+
+        public static final String Host = "Host";
+
+        public static final String HostLower = "host";
+
+        public static final String IfModifiedSince = "If-Modified-Since";
+
+        public static final String LastModified = "Last-Modified";
+
+        public static final String Location = "Location";
+
+        public static final String MethodOverride = "X-HTTP-Method-Override";
+
+        /**
+         * The Origin header indicates where the cross-origin request or preflight request originates from.
+         */
+        public static final String Origin = "Origin";
+
+        public static final String Referer = "Referer";
+
+        public static final String RetryAfter = "Retry-After";
+
+        public static final String SetCookie = "Set-Cookie";
+
+        public static final String TransferEncoding = "Transfer-Encoding";
+
+        public static final String UserAgent = "User-Agent";
+
+        public static final String XForwardedFor = "X-Forwarded-For";
+
+        public static final String XForwardedHost = "X-Forwarded-Host";
+
+        public static final String XForwardedPort = "X-Forwarded-Port";
+
+        public static final String XForwardedProto = "X-Forwarded-Proto";
+
+        private Headers() { }
+    }
+
+    public static final class Methods {
+        public static final String CONNECT = "CONNECT";
+
+        public static final String DELETE = "DELETE";
+
+        public static final String GET = "GET";
+
+        public static final String HEAD = "HEAD";
+
+        public static final String OPTIONS = "OPTIONS";
+
+        public static final String PATCH = "PATCH";
+
+        public static final String POST = "POST";
+
+        public static final String PUT = "PUT";
+
+        public static final String TRACE = "TRACE";
+
+        private Methods() { }
+    }
+
+    public static final class TransferEncodings {
+        public static final String Chunked = "chunked";
+
+        public static final String Compress = "compress";
+
+        public static final String Deflate = "deflate";
+
+        public static final String Gzip = "gzip";
+
+        private TransferEncodings() { }
+    }
+}
